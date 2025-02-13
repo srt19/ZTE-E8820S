@@ -27,6 +27,7 @@ env:
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
   TZ: Asia/Jakarta
+  PATCH1: patch/0001-ZTE8820S.patch
 
 jobs:
   build:
@@ -64,6 +65,9 @@ jobs:
 
         cd ..
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+
+    - name: Applying patch
+      run: cd /workdir/openwrt && patch -p0001 < $GITHUB_WORKSPACE/$PATCH1
 
     - name: Load custom feeds
       run: |
