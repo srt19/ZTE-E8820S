@@ -11,10 +11,16 @@
 #
 
 # Modify default IP
-#sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
+sed -i 's/192.168.1.1/192.168.11.1/g' package/base-files/files/bin/config_generate
 
 # Modify default theme
 #sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
 
 # Modify hostname
-#sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
+sed -i 's/OpenWrt/Mococo/g' package/base-files/files/bin/config_generate
+
+# Change timezone
+sed -i "s/'UTC'/'WIT-7'\n set system.@system[-1].zonename='Asia\/Jakarta'/g" package/base-files/files/bin/config_generate
+
+# Fixing numbers of connection
+sed -i '/customized in this file/a net.netfilter.nf_conntrack_max=165535' package/base-files/files/etc/sysctl.conf
