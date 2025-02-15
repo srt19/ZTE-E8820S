@@ -1,0 +1,221 @@
+diff --git a/target/linux/ramips/dts/mt7621_zte_e8820s.dts b/target/linux/ramips/dts/mt7621_zte_e8820s.dts
+new file mode 100644
+index 0000000000..0e8d9f9eec
+--- /dev/null
++++ b/target/linux/ramips/dts/mt7621_zte_e8820s.dts
+@@ -0,0 +1,187 @@
++#include "mt7621.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++
++/ {
++       model = "ZTE E8820S";
++       compatible = "zte,e8820s", "mediatek,mt7621-soc";
++
++       aliases {
++               led-boot = &led_power;
++               led-failsafe = &led_power;
++               led-running = &led_power;
++               led-upgrade = &led_power;
++       };
++
++       chosen {
++               bootargs = "console=ttyS0,115200";
++       };
++
++       leds {
++               compatible = "gpio-leds";
++
++               led_sys: sys {
++                       label = "white:sys";
++                       gpios = <&gpio 3 GPIO_ACTIVE_LOW>;
++               };
++
++               led_power: power {
++                       label = "white:power";
++                       gpios = <&gpio 16 GPIO_ACTIVE_LOW>;
++               };
++
++       };
++
++       keys {
++               compatible = "gpio-keys";
++
++               reset {
++                       label = "reset";
++                       gpios = <&gpio 18 GPIO_ACTIVE_LOW>;
++                       linux,code = <KEY_RESTART>;
++               };
++
++               wps {
++                       label = "wps";
++                       gpios = <&gpio 8 GPIO_ACTIVE_LOW>;
++                       linux,code = <KEY_WPS_BUTTON>;
++               };
++
++               wifi {
++                       label = "wifi";
++                       gpios = <&gpio 10 GPIO_ACTIVE_LOW>;
++                       linux,code = <KEY_RFKILL>;
++               };
++       };
++};
++
++&nand {
++       status = "okay";
++
++       partitions {
++               compatible = "fixed-partitions";
++               #address-cells = <1>;
++               #size-cells = <1>;
++
++               partition@0 {
++                       label = "u-boot";
++                       reg = <0x0 0x80000>;
++                       read-only;
++               };
++
++               partition@80000 {
++                       label = "u-boot-env";
++                       reg = <0x80000 0x80000>;
++                       read-only;
++               };
++
++               factory: partition@100000 {
++                       label = "factory";
++                       reg = <0x100000 0x40000>;
++                       read-only;
++               };
++
++               partition@140000 {
++                       label = "kernel";
++                       reg = <0x140000 0x400000>;
++               };
++
++               partition@540000 {
++                       label = "ubi";
++                       reg = <0x540000 0x7a40000>;
++               };
++
++               /*
++                * Leave 512 KiB for the bad block table
++                */
++       };
++};
++
++&pcie {
++       status = "okay";
++       reset-gpios = <&gpio 19 GPIO_ACTIVE_LOW>,
++                                 <&gpio 4 GPIO_ACTIVE_LOW>;
++};
++
++
++&pcie0 {
++    mt76@0,0 {
++        reg = <0x0000 0 0 0 0>;
++        mediatek,mtd-eeprom = <&factory 0x0000>;
++
++        led {
++            led-active-low;
++        };
++
++    };
++};
++
++&pcie1 {
++    mt76@0,0 {
++        reg = <0x0000 0 0 0 0>;
++        mediatek,mtd-eeprom = <&factory 0x8000>;
++        ieee80211-freq-limit = <5000000 6000000>;
++
++        led {
++            led-sources = <2>;
++            led-active-low;
++        };
++
++    };
++};
++
++
++&gmac0 {
++    mtd-mac-address = <&factory 0xe000>;
++};
++
++&switch0 {
++    ports {
++        port@4 {
++            status = "okay";
++            label = "wan";
++            mtd-mac-address = <&factory 0xe006>;
++        };
++
++        port@0 {
++            status = "okay";
++            label = "lan1";
++        };
++
++        port@1 {
++            status = "okay";
++            label = "lan2";
++        };
++
++        port@2 {
++            status = "okay";
++            label = "lan3";
++        };
++
++        port@3 {
++            status = "okay";
++            label = "lan4";
++        };
++    };
++};
++
++&state_default {
++       gpio {
++               groups = "jtag", "uart2", "uart3", "wdt";
++               function = "gpio";
++       };
++};
++
++&factory {
++       compatible = "nvmem-cells";
++       #address-cells = <1>;
++       #size-cells = <1>;
++
++       macaddr_factory_e000: macaddr@e000 {
++               reg = <0xe000 0x6>;
++       };
++       macaddr_factory_e006: macaddr@e006 {
++               reg = <0xe006 0x6>;
++       };
++};
+diff --git a/target/linux/ramips/image/Makefile b/target/linux/ramips/image/Makefile
+index fdc15aa1ef..2a8f4407f3 100644
+--- a/target/linux/ramips/image/Makefile
++++ b/target/linux/ramips/image/Makefile
+@@ -229,6 +229,23 @@ define Device/seama-lzma-loader
+   KERNEL_INITRAMFS := $$(KERNEL/lzma-loader) | uImage none
+ endef
+
++define Device/zte_e8820s
++  $(Device/dsa-migration)
++  $(Device/uimage-lzma-loader)
++  BLOCKSIZE := 128k
++  PAGESIZE := 2048
++  KERNEL_SIZE := 4096k
++  UBINIZE_OPTS := -E 5
++  IMAGE_SIZE := 130304k
++  IMAGES += factory.bin
++  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
++  IMAGE/factory.bin := append-kernel | pad-to $$(KERNEL_SIZE) | append-ubi | \
++       check-size
++  DEVICE_VENDOR := ZTE
++  DEVICE_MODEL := E8820S
++  DEVICE_PACKAGES := kmod-mt7603 kmod-mt76x2 kmod-usb3 uboot-envtools
++endef
++TARGET_DEVICES += zte_e8820s
+ include $(SUBTARGET).mk
+
+ $(eval $(call BuildImage))
