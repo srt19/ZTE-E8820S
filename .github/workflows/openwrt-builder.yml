@@ -136,13 +136,14 @@ jobs:
         path: ${{ env.FIRMWARE }}
 
     - name: Upload firmware to release
-      uses: softprops/action-gh-release@master
+      uses: svenstaro/upload-release-action@v2
       if: steps.organize.outputs.status == 'success' && !cancelled()
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        files: ${{ env.FIRMWARE }}/*
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ${{ env.FIRMWARE }}/*
+        tag: ${{ github.ref }}
+        file_glob: true
+        overwrite: true
 
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main
