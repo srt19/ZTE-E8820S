@@ -1,0 +1,11 @@
+
+CONFIG_TARGET_ramips_mt7621_DEVICE_zte_e8820s=y
+
+# passwall
+CONFIG_PACKAGE_luci-app-passwall=y
+CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Xray=y
+
+# since passwall using dnsmasq-full
+CONFIG_PACKAGE_dnsmasq=n
+CONFIG_PACKAGE_block-mount=y
+CONFIG_PACKAGE_kmod-fs-ext4=y
