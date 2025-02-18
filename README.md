@@ -10,8 +10,6 @@ no password, just hit enter
 
 ## Included packages
 - Passwall
-- Xray
-- USB stuff (2.0, 3.0, rndis)
 
 ### Based on
 - [Official Openwrt Firmware](https://github.com/openwrt/openwrt)
