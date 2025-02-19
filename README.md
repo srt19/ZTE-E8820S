@@ -1,3 +1,5 @@
+[![OpenWrt builder](https://github.com/srt19/ZTE-E8820S/actions/workflows/openwrt-builder.yml/badge.svg?event=release)](https://github.com/srt19/ZTE-E8820S/actions/workflows/openwrt-builder.yml)
+
 # ZTE E8820S Openwrt
 Custom firmware for ZTE E8220S based on official openwrt source
 
