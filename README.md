@@ -10,9 +10,6 @@ user = root
 no password, just hit enter
 ```
 
-## Included packages
-- Passwall
-
 ### Based on
 - [Official Openwrt Firmware](https://github.com/openwrt/openwrt)
 - Github Action [P3TERX Actions-Openwrt](https://github.com/P3TERX/Actions-OpenWrt/)

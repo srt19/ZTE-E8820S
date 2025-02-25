@@ -21,7 +21,7 @@ env:
   # VERSION: v24.10.0
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: config/official.config
-  DIY_P1_SH: script/diy-part1.sh
+  #DIY_P1_SH: script/diy-part1.sh
   DIY_P2_SH: script/diy-part2.sh
   UPLOAD_BIN_DIR: true
   UPLOAD_FIRMWARE: true
@@ -66,14 +66,7 @@ jobs:
 
     - name: Applying patch
       run: cd /workdir/openwrt && patch -p0001 < $GITHUB_WORKSPACE/$PATCH1
-
-    - name: Load custom feeds
-      run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
-        chmod +x $DIY_P1_SH
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
-
+      
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
