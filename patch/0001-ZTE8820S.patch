@@ -213,7 +213,7 @@ index fdc15aa1ef..2a8f4407f3 100644
 +       check-size
 +  DEVICE_VENDOR := ZTE
 +  DEVICE_MODEL := E8820S
-+  DEVICE_PACKAGES := kmod-mt7603 kmod-mt76x2 kmod-usb3 uboot-envtools
++  DEVICE_PACKAGES := kmod-mt76 kmod-mt76-core kmod-mt7603 kmod-mt76x02-common kmod-mt76x2 kmod-mt76x2-common kmod-usb3 uboot-envtools
 +endef
 +TARGET_DEVICES += zte_e8820s
  include $(SUBTARGET).mk
