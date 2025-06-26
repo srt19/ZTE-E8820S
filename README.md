@@ -8,6 +8,9 @@ Custom firmware for ZTE E8220S based on official openwrt source
 URL = 192.168.11.1
 user = root
 no password, just hit enter
+
+Wi-Fi ssid = OpenWrt
+Password = 12345678
 ```
 
 ### Based on
