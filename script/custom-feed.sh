@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd openwrt
+
 echo "src-git eqosplus https://github.com/sirpdboy/luci-app-eqosplus.git" >> "feeds.conf.default"
 
 ./scripts/feeds update eqosplus
