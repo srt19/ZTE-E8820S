@@ -91,10 +91,10 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: Add eqosplus
-  		run: |
-    		chmod +x $CUSTOM_FEED
-      	$GITHUB_WORKSPACE/$CUSTOM_FEED
+    - name: Add custom package
+      run: |
+        chmod +x $CUSTOM_FEED
+        $GITHUB_WORKSPACE/$CUSTOM_FEED
 
     - name: Compile the firmware
       id: compile
