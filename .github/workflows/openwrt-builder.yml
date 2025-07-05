@@ -16,13 +16,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_version:
+        required: true
         type: string
-      snapshots:
-        type: choice
-        options:
-          - yes
-          - no
-
+      
 env:
   REPO_URL: https://github.com/openwrt/openwrt
   CONFIG_FILE: config/official.config
@@ -63,7 +59,7 @@ jobs:
         cd openwrt
         git pull
 
-        if [ "${{ github.event.inputs.snapshots }}" = false ]; then
+        if ! [ "${{ github.event.inputs.tag_version }}" = "snapshot" ]; then
           git checkout ${{ github.event.inputs.tag_version }}
         fi
 
@@ -142,12 +138,6 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: ${{ env.FIRMWARE }}/*
-        tag: ${{ github.ref }}
+        tag: ${{ github.event.inputs.tag_version }}
         file_glob: true
         overwrite: true
-
-    - name: Delete workflow runs
-      uses: Mattraks/delete-workflow-runs@main
-      with:
-        retain_days: 1
-        keep_minimum_runs: 2
