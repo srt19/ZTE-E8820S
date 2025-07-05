@@ -16,7 +16,6 @@ on:
   workflow_dispatch:
     inputs:
       tag_version:
-        required: true
         type: string
       snapshots:
         type: choice
