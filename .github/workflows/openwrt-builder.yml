@@ -13,12 +13,19 @@
 name: OpenWrt builder
 
 on: 
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag_version:
+        required: true
+        type: string
+      snapshots:
+        type: choice
+        options:
+          - yes
+          - no
 
 env:
   REPO_URL: https://github.com/openwrt/openwrt
-  FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: config/official.config
   DIY_P2_SH: script/diy-part2.sh
   UPLOAD_BIN_DIR: true
@@ -56,8 +63,10 @@ jobs:
         git clone $REPO_URL
         cd openwrt
         git pull
-        
-        git checkout ${{ github.ref }}
+
+        if [ "${{ github.event.inputs.snapshots }}" = "no" ]; then
+          git checkout ${{ github.event.inputs.tag_version }}
+        fi
 
         cd ..
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
