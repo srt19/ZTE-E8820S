@@ -63,7 +63,7 @@ jobs:
         cd openwrt
         git pull
 
-        if [ "${{ github.event.inputs.snapshots }}" = "no" ]; then
+        if [ "${{ github.event.inputs.snapshots }}" = false ]; then
           git checkout ${{ github.event.inputs.tag_version }}
         fi
 
