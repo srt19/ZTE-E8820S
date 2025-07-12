@@ -27,7 +27,6 @@ env:
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
   TZ: Asia/Jakarta
-  PATCH1: patch/0001-ZTE8820S.patch
 
 jobs:
   build:
@@ -67,7 +66,9 @@ jobs:
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
     - name: Applying patch
-      run: cd /workdir/openwrt && patch -p0001 < $GITHUB_WORKSPACE/$PATCH1
+      run: |
+        mv patch/mt7621_zte_e8820s.dts openwrt/target/linux/ramips/dts
+        cat patch/zte.txt >> openwrt/target/linux/ramips/image/mt7621.mk
       
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a

@@ -14,6 +14,6 @@ Password = 12345678
 ### Based on
 - [Official Openwrt Firmware](https://github.com/openwrt/openwrt)
 - Github Action [P3TERX Actions-Openwrt](https://github.com/P3TERX/Actions-OpenWrt/)
-- Patch File [TwoOnefour](https://github.com/TwoOnefour/E8820S-OpenWrt) [nanchuci](https://github.com/nanchuci/E8820S-OpenWrt)
+- Patch File [ImmortalWRT](https://github.com/immortalwrt/immortalwrt)
 
 [![OpenWrt builder](https://github.com/srt19/ZTE-E8820S/actions/workflows/openwrt-builder.yml/badge.svg?event=release)](https://github.com/srt19/ZTE-E8820S/actions/workflows/openwrt-builder.yml)
