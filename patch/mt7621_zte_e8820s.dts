@@ -80,67 +80,45 @@
 };
 
 &nand {
-	status = "okay";
+       status = "okay";
 
-	partitions {
-		compatible = "fixed-partitions";
-		#address-cells = <1>;
-		#size-cells = <1>;
+       partitions {
+               compatible = "fixed-partitions";
+               #address-cells = <1>;
+               #size-cells = <1>;
 
-		partition@0 {
-			label = "Bootloader";
-			reg = <0x0 0x220000>;
-			read-only;
-		};
+               partition@0 {
+                       label = "u-boot";
+                       reg = <0x0 0x80000>;
+                       read-only;
+               };
 
-		partition@80000 {
-			label = "config";
-			reg = <0x220000 0x140000>;
-			read-only;
+               partition@80000 {
+                       label = "u-boot-env";
+                       reg = <0x80000 0x80000>;
+                       read-only;
+               };
 
-			nvmem-layout {
-				compatible = "fixed-layout";
-				#address-cells = <1>;
-				#size-cells = <1>;
+               factory: partition@100000 {
+                       label = "factory";
+                       reg = <0x100000 0x40000>;
+                       read-only;
+               };
 
-				macaddr_config_12: macaddr@12 {
-					compatible = "mac-base";
-					reg = <0x12 0x6>;
-					#nvmem-cell-cells = <1>;
-				};
-			};
-		};
+               partition@140000 {
+                       label = "kernel";
+                       reg = <0x140000 0x400000>;
+               };
 
-		partition@360000 {
-			label = "factory";
-			reg = <0x360000 0x140000>;
-			read-only;
+               partition@540000 {
+                       label = "ubi";
+                       reg = <0x540000 0x7a40000>;
+               };
 
-			nvmem-layout {
-				compatible = "fixed-layout";
-				#address-cells = <1>;
-				#size-cells = <1>;
-
-				eeprom_factory_f000: eeprom@f000 {
-					reg = <0xf000 0x400>;
-				};
-
-				eeprom_factory_f800: eeprom@f800 {
-					reg = <0xf800 0x200>;
-				};
-			};
-		};
-
-		partition@4a0000 {
-			label = "kernel";
-			reg = <0x4a0000 0x400000>;
-		};
-
-		partition@8a0000 {
-			label = "ubi";
-			reg = <0x8a0000 0x76e0000>;
-		};
-	};
+               /*
+                * Leave 512 KiB for the bad block table
+                */
+       };
 };
 
 &pcie {
