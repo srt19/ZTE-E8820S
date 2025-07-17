@@ -23,4 +23,4 @@ This firmware required [BREED](https://breed.hackpascal.net/) to booting, otherw
 - Github Action [P3TERX Actions-Openwrt](https://github.com/P3TERX/Actions-OpenWrt/)
 - Patch File [TwoOnefour](https://github.com/TwoOnefour/E8820S-OpenWrt)
 
-[![OpenWrt builder](https://github.com/srt19/ZTE-E8820S/actions/workflows/openwrt-builder.yml/badge.svg?event=release)](https://github.com/srt19/ZTE-E8820S/actions/workflows/openwrt-builder.yml)
+[![OpenWrt builder](https://github.com/srt19/ZTE-E8820S/actions/workflows/openwrt-builder.yml/badge.svg?branch=main)](https://github.com/srt19/ZTE-E8820S/actions/workflows/openwrt-builder.yml)
