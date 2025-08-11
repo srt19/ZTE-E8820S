@@ -92,6 +92,13 @@ jobs:
         tar -xvf openwrt-toolchain-24.10.1-ramips-mt7621_gcc-13.3.0_musl.Linux-x86_64.tar.zst && rm openwrt-toolchain-24.10.1-ramips-mt7621_gcc-13.3.0_musl.Linux-x86_64.tar.zst
         ./scripts/ext-toolchain.sh --toolchain openwrt*/toolchain* --overwrite-config --config ramips/mt7621
 
+    - name: Download package
+      id: package
+      run: |
+        cd openwrt
+        make defconfig
+        make download -j8
+        
     - name: Compile the firmware
       id: compile
       run: |
