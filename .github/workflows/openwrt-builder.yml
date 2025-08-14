@@ -69,6 +69,9 @@ jobs:
       run: |
         mv patch/mt7621_zte_e8820s.dts openwrt/target/linux/ramips/dts
         cat patch/zte.txt >> openwrt/target/linux/ramips/image/mt7621.mk
+        cd openwrt/target/linux/ramips/mt7621/base-files/etc/board.d/
+        head -n -5 01_leds >> temp.txt && rm 01_leds
+        cat patch/leds.txt >> temp.txt && mv temp.txt 01_leds
       
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
@@ -84,13 +87,6 @@ jobs:
         chmod +x $DIY_P2_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
-
-    - name: Configure external toolchain
-      run : |
-        cd openwrt
-        wget https://downloads.openwrt.org/releases/24.10.1/targets/ramips/mt7621/openwrt-toolchain-24.10.1-ramips-mt7621_gcc-13.3.0_musl.Linux-x86_64.tar.zst
-        tar -xvf openwrt-toolchain-24.10.1-ramips-mt7621_gcc-13.3.0_musl.Linux-x86_64.tar.zst && rm openwrt-toolchain-24.10.1-ramips-mt7621_gcc-13.3.0_musl.Linux-x86_64.tar.zst
-        ./scripts/ext-toolchain.sh --toolchain openwrt*/toolchain* --overwrite-config --config ramips/mt7621
 
     - name: Download package
       id: package
