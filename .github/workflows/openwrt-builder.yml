@@ -22,7 +22,6 @@ on:
 env:
   REPO_URL: https://github.com/openwrt/openwrt
   CONFIG_FILE: config/official.config
-  DIY_P2_SH: script/diy-part2.sh
   UPLOAD_BIN_DIR: true
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
@@ -85,9 +84,6 @@ jobs:
         mv patch/99-default-settings openwrt/package/base-files/files/etc/uci-defaults
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-        chmod +x $DIY_P2_SH
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: Download package
       id: package
