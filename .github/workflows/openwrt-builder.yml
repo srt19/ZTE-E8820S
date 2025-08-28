@@ -72,6 +72,7 @@ jobs:
         cd openwrt/target/linux/ramips/mt7621/base-files/etc/board.d/
         head -n -5 01_leds >> temp.txt && rm 01_leds
         cat leds.txt >> temp.txt && mv temp.txt 01_leds
+        rm leds.txt
       
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
