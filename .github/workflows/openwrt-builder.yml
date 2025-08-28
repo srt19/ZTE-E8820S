@@ -22,7 +22,6 @@ on:
 env:
   REPO_URL: https://github.com/openwrt/openwrt
   CONFIG_FILE: config/official.config
-  DIY_P2_SH: script/diy-part2.sh
   UPLOAD_BIN_DIR: true
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
@@ -43,7 +42,7 @@ jobs:
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
         sudo docker image prune --all --force
         sudo -E apt-get -qq update
-        sudo -E apt-get -qq install ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+        sudo -E apt-get -qq install ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev zstd
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
@@ -69,6 +68,11 @@ jobs:
       run: |
         mv patch/mt7621_zte_e8820s.dts openwrt/target/linux/ramips/dts
         cat patch/zte.txt >> openwrt/target/linux/ramips/image/mt7621.mk
+        cp patch/leds.txt openwrt/target/linux/ramips/mt7621/base-files/etc/board.d/
+        cd openwrt/target/linux/ramips/mt7621/base-files/etc/board.d/
+        head -n -5 01_leds >> temp.txt && rm 01_leds
+        cat leds.txt >> temp.txt && mv temp.txt 01_leds
+        rm leds.txt
       
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
@@ -81,9 +85,6 @@ jobs:
         mv patch/99-default-settings openwrt/package/base-files/files/etc/uci-defaults
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-        chmod +x $DIY_P2_SH
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: Download package
       id: package
@@ -91,9 +92,7 @@ jobs:
         cd openwrt
         make defconfig
         make download -j8
-        find dl -size -1024c -exec ls -l {} \;
-        find dl -size -1024c -exec rm -f {} \;
-
+        
     - name: Compile the firmware
       id: compile
       run: |
