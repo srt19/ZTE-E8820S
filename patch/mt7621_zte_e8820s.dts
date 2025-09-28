@@ -6,25 +6,25 @@
 #include <dt-bindings/input/input.h>
 
 / {
-    model = "ZTE E8820S";
-    compatible = "zte,e8820s", "mediatek,mt7621-soc";
+	model = "ZTE E8820S";
+	compatible = "zte,e8820s", "mediatek,mt7621-soc";
 
-    aliases {
-        led-boot = &led_sys;
-        led-failsafe = &led_sys;
-        led-running = &led_power;
-        led-upgrade = &led_power;
-        label-mac-device = &gmac0;
-    };
+	aliases {
+		led-boot = &led_sys;
+		led-failsafe = &led_sys;
+		led-running = &led_power;
+		led-upgrade = &led_power;
+		label-mac-device = &gmac0;
+	};
 
-    chosen {
-        bootargs = "console=ttyS0,115200";
-    };
+	chosen {
+		bootargs = "console=ttyS0,115200";
+	};
 
-    leds {
-        compatible = "gpio-leds";
+	leds {
+		compatible = "gpio-leds";
 
-        led_power: power {
+		led_power: power {
 			label = "white:power";
 			gpios = <&gpio 16 GPIO_ACTIVE_LOW>;
 		};
@@ -43,93 +43,93 @@
 			label = "white:wlan5g";
 			gpios = <&gpio 12 GPIO_ACTIVE_LOW>;
 		};
-    };
+	};
 
-    keys {
-        compatible = "gpio-keys";
+	keys {
+		compatible = "gpio-keys";
 
-        reset {
-            label = "reset";
-            gpios = <&gpio 18 GPIO_ACTIVE_HIGH>;
-            linux,code = <KEY_RESTART>;
-        };
+		reset {
+			label = "reset";
+			gpios = <&gpio 18 GPIO_ACTIVE_HIGH>;
+			linux,code = <KEY_RESTART>;
+		};
 
-        wps {
-            label = "wps";
-            gpios = <&gpio 8 GPIO_ACTIVE_LOW>;
-            linux,code = <KEY_WPS_BUTTON>;
-        };
+		wps {
+			label = "wps";
+			gpios = <&gpio 8 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_WPS_BUTTON>;
+		};
 
-        wifi {
-            label = "wifi";
-            gpios = <&gpio 10 GPIO_ACTIVE_HIGH>;
-            linux,code = <KEY_RFKILL>;
-        };
-    };
+		wifi {
+			label = "wifi";
+			gpios = <&gpio 10 GPIO_ACTIVE_HIGH>;
+			linux,code = <KEY_RFKILL>;
+		};
+	};
 };
 
 &nand {
-    status = "okay";
+	status = "okay";
 
-    partitions {
-            compatible = "fixed-partitions";
-            #address-cells = <1>;
-            #size-cells = <1>;
+	partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
 
-            partition@0 {
-                label = "u-boot";
-                reg = <0x0 0x80000>;
-                read-only;
-            };
+			partition@0 {
+				label = "u-boot";
+				reg = <0x0 0x80000>;
+				read-only;
+			};
 
-            partition@80000 {
-                label = "u-boot-env";
-                reg = <0x80000 0x80000>;
-                read-only;
-            };
+			partition@80000 {
+				label = "u-boot-env";
+				reg = <0x80000 0x80000>;
+				read-only;
+			};
 
-            factory: partition@100000 {
-                label = "factory";
-                reg = <0x100000 0x40000>;
-                read-only;
-            };
+			factory: partition@100000 {
+				label = "factory";
+				reg = <0x100000 0x40000>;
+				read-only;
+			};
 
-            partition@140000 {
-                label = "kernel";
-                reg = <0x140000 0x400000>;
-            };
+			partition@140000 {
+				label = "kernel";
+				reg = <0x140000 0x400000>;
+			};
 
-            partition@540000 {
-                label = "ubi";
-                reg = <0x540000 0x7a40000>;
-            };
+			partition@540000 {
+				label = "ubi";
+				reg = <0x540000 0x7a40000>;
+			};
 
-            /*
-            * Leave 512 KiB for the bad block table
-            */
-    };
+			/*
+			* Leave 512 KiB for the bad block table
+			*/
+	};
 };
 
 &pcie {
-    status = "okay";
+	status = "okay";
 };
 
 &pcie0 {
-    wifi@0,0 {
-        compatible = "pci14c3,7603";
-        reg = <0x0000 0 0 0 0>;
-        mediatek,mtd-eeprom = <&factory 0x0000>;
+	wifi@0,0 {
+		compatible = "pci14c3,7603";
+		reg = <0x0000 0 0 0 0>;
+		mediatek,mtd-eeprom = <&factory 0x0000>;
 		ieee80211-freq-limit = <2400000 2500000>;
-    };
+	};
 };
 
 &pcie1 {
-    wifi@0,0 {
-        compatible = "pci14c3,7662";
+	wifi@0,0 {
+		compatible = "pci14c3,7662";
 		reg = <0x0000 0 0 0 0>;
 		mediatek,mtd-eeprom = <&factory 0x8000>;
 		ieee80211-freq-limit = <5000000 6000000>;
-    };
+	};
 };
 
 &ethphy4 {
@@ -137,12 +137,12 @@
 };
 
 &gmac0 {
-    nvmem-cells = <&macaddr_factory_e006>;
+	nvmem-cells = <&macaddr_factory_e006>;
 	nvmem-cell-names = "mac-address";
 };
 
 &gmac1 {
-    status = "okay";
+	status = "okay";
 	label = "wan";
 	phy-handle = <&ethphy4>;
 
@@ -151,8 +151,8 @@
 };
 
 &switch0 {
-    ports {
-        port@0 {
+	ports {
+		port@0 {
 			status = "okay";
 			label = "lan1";
 		};
@@ -171,18 +171,18 @@
 			status = "okay";
 			label = "lan4";
 		};
-    };
+	};
 };
 
 &state_default {
-    gpio {
-        groups = "jtag", "uart2", "uart3", "wdt";
-        function = "gpio";
-    };
+	gpio {
+		groups = "jtag", "uart2", "uart3", "wdt";
+		function = "gpio";
+	};
 };
 
 &factory {
-    compatible = "nvmem-cells";
+	compatible = "nvmem-cells";
 	#address-cells = <1>;
 	#size-cells = <1>;
 	

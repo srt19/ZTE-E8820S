@@ -54,6 +54,9 @@ jobs:
       run: |
         df -hT $PWD
         git clone $REPO_URL
+        wget https://downloads.openwrt.org/releases/24.10.3/targets/ramips/mt7621/openwrt-toolchain-24.10.3-ramips-mt7621_gcc-13.3.0_musl.Linux-x86_64.tar.zst
+        tar -I zstd -xvf openwrt-toolchain-24.10.3-ramips-mt7621_gcc-13.3.0_musl.Linux-x86_64.tar.zst
+        mv openwrt-toolchain*/toolchain* openwrt/
         cd openwrt
         git pull
 
@@ -85,6 +88,8 @@ jobs:
         mv patch/99-default-settings openwrt/package/base-files/files/etc/uci-defaults
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        cd openwrt
+        ./scripts/ext-toolchain.sh --toolchain toolchain* --overwrite-config --config ramips/mt7621
 
     - name: Download package
       id: package
