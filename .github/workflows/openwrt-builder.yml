@@ -89,7 +89,7 @@ jobs:
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
         cd openwrt
-        ./scripts/ext-toolchain.sh --toolchain toolchain* --overwrite-config --config ramips/mt7621
+        ./scripts/ext-toolchain.sh --toolchain toolchain-mipsel_24kc_gcc-13.3.0_musl/ --overwrite-config --config ramips/mt7621
 
     - name: Download package
       id: package
