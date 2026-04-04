@@ -1,0 +1,169 @@
+name: Build OpenWrt Firmware
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo_branch:
+        description: 'OpenWrt branch or tag (e.g., openwrt-23.05, v23.05.3)'
+        required: true
+        type: string
+      config_content:
+        description: 'Paste the entire contents of your .config file here'
+        required: true
+        type: string
+      target_arch:
+        description: 'Target architecture (e.g., ramips/mt7621)'
+        required: true
+        default: 'ramips/mt7621'
+        type: string
+      toolchain_prefix:
+        description: 'Toolchain prefix (e.g., mipsel-openwrt-linux-musl-)'
+        required: true
+        default: 'mipsel-openwrt-linux-musl-'
+        type: string
+      toolchain_libc:
+        description: 'Toolchain libc (e.g., musl)'
+        required: true
+        default: 'musl'
+        type: string
+      is_latest:
+        description: 'Set the release as latest'
+        default: false
+        type: boolean
+      is_prerelease:
+        description: 'Set the release as pre-release'
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+env:
+  REPO_URL: https://github.com/openwrt/openwrt
+  OPENWRT_RELEASE: ${{ inputs.repo_branch }}
+  OPENWRT_TARGET: ${{ inputs.target_arch }}
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Free Disk Space
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        sudo apt-get clean
+
+    - name: Install Build Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential clang flex bison g++ awk gcc-multilib g++-multilib \
+        gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget ccache awscli curl
+
+    - name: Clone OpenWrt Source
+      run: git clone --depth 1 $REPO_URL -b ${{ inputs.repo_branch }} openwrt
+
+    - name: Download External Toolchain
+      # Downloads and extracts it toolchain and llvm
+      run: |
+        mkdir -p /opt/toolchain
+        BASE_URL="https://downloads.openwrt.org/releases/${OPENWRT_RELEASE}/targets/${OPENWRT_TARGET}"
+        
+        echo "Fetching toolchain from: $BASE_URL"
+        TOOLCHAIN_FILE=$(curl -s "$BASE_URL/sha256sums" | grep -o 'openwrt-toolchain-[^ ]*\.tar\.xz')
+        
+        if [ -z "$TOOLCHAIN_FILE" ]; then
+          echo "Error: Could not find toolchain file on OpenWrt servers."
+          exit 1
+        fi
+        
+        echo "Downloading $TOOLCHAIN_FILE..."
+        wget -q "$BASE_URL/$TOOLCHAIN_FILE"
+        tar -xf "$TOOLCHAIN_FILE" -C /opt/toolchain --strip-components=2 --wildcards "*/toolchain-mipsel_24kc_gcc-*"
+        rm "$TOOLCHAIN_FILE"
+
+        echo "Fetching LLVM BPF from : $BASE_URL"
+        LLVM_FILE=$(curl -s "$BASE_URL/sha256sums" | grep -o 'llvm-bpf-[^ ]*\.tar\.xz')
+
+        if [ -z "$LLVM_FILE" ]; then
+          echo "Error: Could not find LLVM file on OpenWrt servers."
+          exit 1
+        fi
+
+        echo "Downloading $LLVM_FILE..."
+        wget -q "$BASE_URL/$LLVM_FILE"
+        tar -xf "$LLVM_FILE" -C ./openwrt
+        rm "$LLVM_FILE"
+
+    - name: Applying patch
+      run: |
+        cp patch/mt7621_zte_e8820s.dts openwrt/target/linux/ramips/dts
+        sed -i '/esac/e cat patch/leds.txt' openwrt/target/linux/ramips/mt7621/base-files/etc/board.d/01_leds
+        sed -i '72r patch/upgrade.txt' openwrt/target/linux/ramips/mt7621/base-files/lib/upgrade/platform.sh
+        cat patch/zte.txt >> openwrt/target/linux/ramips/image/mt7621.mk
+        cp patch/99-default-settings openwrt/package/base-files/files/etc/uci-defaults
+
+    - name: Update and Install Feeds
+      working-directory: ./openwrt
+      run: |
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+
+    - name: Generate Custom Configuration & Inject Toolchain
+      run: |
+        # Write the pasted manual config
+        cat << 'EOF' > openwrt/.config
+        ${{ inputs.config_content }}
+        EOF
+        
+        # Force the build system to use the external toolchain downloaded earlier
+        cat << 'EOF' >> openwrt/.config
+        
+        CONFIG_DEVEL=y
+        CONFIG_EXTERNAL_TOOLCHAIN=y
+        CONFIG_TOOLCHAIN_ROOT="/opt/toolchain"
+        CONFIG_TOOLCHAIN_PREFIX=${{ inputs.toolchain_prefix }}
+        CONFIG_TOOLCHAIN_LIBC=${{ inputs.toolchain_libc }}
+        EOF
+        
+        cd openwrt
+        make defconfig
+
+    - name: Download Packages
+      working-directory: ./openwrt
+      run: |
+        make download -j8
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+
+    - name: Compile OpenWrt
+      working-directory: ./openwrt
+      run: |
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc) || make -j1 V=s
+        rm -rf bin/targets/ramips/mt7621/packages
+
+    - name: Generate Release Tag
+      id: tag
+      run: |
+        echo "release_tag=${{ inputs.repo_branch }}-$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_OUTPUT
+        echo "release_name=OpenWrt ZTE E8820S ${{ inputs.repo_branch }} $(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
+
+    - name: Publish to GitHub Releases
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        name: ${{ steps.tag.outputs.release_name }}
+        prerelease: ${{ inputs.is_prerelease }}
+        make_latest: ${{ inputs.is_prerelease == false && 'true' || 'false'}}
+        files: openwrt/bin/targets/ramips/mt7621/*
+        body: |
+          Automated OpenWrt firmware build for ZTE E8820S.
+          Based on branch/tag: **${{ inputs.repo_branch }}**
+          *Compiled using pre-compiled external toolchain from release ${{ env.OPENWRT_RELEASE }}.*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
