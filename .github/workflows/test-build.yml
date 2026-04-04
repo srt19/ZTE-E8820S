@@ -8,8 +8,8 @@ on:
         required: true
         type: string
 
-      config_content:
-        description: 'Paste the entire contents of your .config file here'
+      config_link:
+        description: 'Paste raw config file from pastebin'
         required: true
         type: string
 
@@ -55,7 +55,7 @@ jobs:
     
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Free Disk Space
       run: |
@@ -106,14 +106,9 @@ jobs:
         ./scripts/feeds install -a
 
     - name: Generate Custom Configuration & Inject Toolchain
+      working-directory: ./openwrt
       run: |
-        # Write the pasted manual config
-        cat << 'EOF' > openwrt/.config
-        ${{ inputs.config_content }}
-        EOF
-        
-        cd openwrt
-
+        wget -q -O .config "${{ inputs.config_link }}"
         ./scripts/ext-toolchain.sh --toolchain /opt/toolchain --overwrite-config --config ${{ inputs.target_arch }}
         make defconfig
 
@@ -131,6 +126,14 @@ jobs:
         make -j$(nproc) || make -j1 V=s
         rm -rf bin/targets/ramips/mt7621/packages
 
+    - name: Extract Vermagic
+      id: get_vermagic
+      run: |
+        # Adjust the path to where your JSON file is located
+        JSON_FILE="openwrt/bin/targets/ramips/mt7621/profiles.json"
+        VERMAGIC=$(grep -oP '"vermagic":"\K[^"]+' "$JSON_FILE")
+        echo "vermagic=$VERMAGIC" >> $GITHUB_OUTPUT
+
     - name: Generate Release Tag
       id: tag
       run: |
@@ -138,7 +141,7 @@ jobs:
         echo "release_name=OpenWrt ZTE E8820S ${{ inputs.repo_branch }} $(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
 
     - name: Publish to GitHub Releases
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v2.6.1
       with:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         name: ${{ steps.tag.outputs.release_name }}
@@ -146,8 +149,11 @@ jobs:
         make_latest: ${{ inputs.is_prerelease == false && 'true' || 'false'}}
         files: openwrt/bin/targets/ramips/mt7621/*
         body: |
+          ## ZTE E8820S OpenWrt Firmware ${{ inputs.repo_branch }}
           Automated OpenWrt firmware build for ZTE E8820S.
-          Based on branch/tag: **${{ inputs.repo_branch }}**
-          *Compiled using pre-compiled external toolchain from release ${{ env.OPENWRT_RELEASE }}.*
+          
+          Version: ${{ inputs.repo_branch }}
+          Vermagic: ${{ steps.get_vermagic.outputs.vermagic }}
+          *Compiled using pre-compiled OpenWrt toolchain*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
