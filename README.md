@@ -59,7 +59,7 @@ If your device using **U-Boot** mod use the official [ImmortalWRT Build](https:/
 ![Installation](image/BREED.webp)
 
 ## Upgrading
-> The upgrade only work from latest release v24.10.6 to v25.12.2
+> The upgrade only work from latest release v24.10.6 to v25.12
 > Since I forgot to include upgrade patch
 
 1. Open your router LUCI web. e.g http://192.168.1.1
