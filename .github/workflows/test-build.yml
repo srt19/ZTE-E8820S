@@ -7,29 +7,33 @@ on:
         description: 'OpenWrt branch or tag (e.g., openwrt-23.05, v23.05.3)'
         required: true
         type: string
+
       config_content:
         description: 'Paste the entire contents of your .config file here'
         required: true
         type: string
+
+      toolchain_link:
+        description: 'URL to the pre-compiled toolchain tarball'
+        required: true
+        type: string
+      
+      llvm_link:
+        description: 'URL to the pre-compiled LLVM BPF tarball'
+        required: true
+        type: string
+
       target_arch:
         description: 'Target architecture (e.g., ramips/mt7621)'
         required: true
         default: 'ramips/mt7621'
         type: string
-      toolchain_prefix:
-        description: 'Toolchain prefix (e.g., mipsel-openwrt-linux-musl-)'
-        required: true
-        default: 'mipsel-openwrt-linux-musl-'
-        type: string
-      toolchain_libc:
-        description: 'Toolchain libc (e.g., musl)'
-        required: true
-        default: 'musl'
-        type: string
+
       is_latest:
         description: 'Set the release as latest'
         default: false
         type: boolean
+
       is_prerelease:
         description: 'Set the release as pre-release'
         default: true
@@ -42,6 +46,8 @@ env:
   REPO_URL: https://github.com/openwrt/openwrt
   OPENWRT_RELEASE: ${{ inputs.repo_branch }}
   OPENWRT_TARGET: ${{ inputs.target_arch }}
+  TOOLCHAIN_URL : ${{ inputs.toolchain_link }}
+  LLVM_URL : ${{ inputs.llvm_link }}
 
 jobs:
   build:
@@ -72,33 +78,18 @@ jobs:
       # Downloads and extracts it toolchain and llvm
       run: |
         mkdir -p /opt/toolchain
-        BASE_URL="https://downloads.openwrt.org/releases/${OPENWRT_RELEASE}/targets/${OPENWRT_TARGET}"
+        toolchain_name="${TOOLCHAIN_URL##*/}"
+        llvm_name="${LLVM_URL##*/}"
         
-        echo "Fetching toolchain from: $BASE_URL"
-        TOOLCHAIN_FILE=$(curl -s "$BASE_URL/sha256sums" | grep -o 'openwrt-toolchain-[^ ]*\.tar\.xz')
-        
-        if [ -z "$TOOLCHAIN_FILE" ]; then
-          echo "Error: Could not find toolchain file on OpenWrt servers."
-          exit 1
-        fi
-        
-        echo "Downloading $TOOLCHAIN_FILE..."
-        wget -q "$BASE_URL/$TOOLCHAIN_FILE"
-        tar -xf "$TOOLCHAIN_FILE" -C /opt/toolchain --strip-components=2 --wildcards "*/toolchain-mipsel_24kc_gcc-*"
-        rm "$TOOLCHAIN_FILE"
+        echo "Downloading $toolchain_name..."
+        wget -q "$TOOLCHAIN_URL"
+        tar -xf "$toolchain_name" -C /opt/toolchain --strip-components=2 --wildcards "*/toolchain-mipsel_24kc_gcc-*"
+        rm "$toolchain_name"
 
-        echo "Fetching LLVM BPF from : $BASE_URL"
-        LLVM_FILE=$(curl -s "$BASE_URL/sha256sums" | grep -o 'llvm-bpf-[^ ]*\.tar\.xz')
-
-        if [ -z "$LLVM_FILE" ]; then
-          echo "Error: Could not find LLVM file on OpenWrt servers."
-          exit 1
-        fi
-
-        echo "Downloading $LLVM_FILE..."
-        wget -q "$BASE_URL/$LLVM_FILE"
-        tar -xf "$LLVM_FILE" -C ./openwrt
-        rm "$LLVM_FILE"
+        echo "Downloading $LLVM_URL..."
+        wget -q "$LLVM_URL"
+        tar -xf "$llvm_name" -C ./openwrt
+        rm "$llvm_name"
 
     - name: Applying patch
       run: |
@@ -121,17 +112,9 @@ jobs:
         ${{ inputs.config_content }}
         EOF
         
-        # Force the build system to use the external toolchain downloaded earlier
-        cat << 'EOF' >> openwrt/.config
-        
-        CONFIG_DEVEL=y
-        CONFIG_EXTERNAL_TOOLCHAIN=y
-        CONFIG_TOOLCHAIN_ROOT="/opt/toolchain"
-        CONFIG_TOOLCHAIN_PREFIX=${{ inputs.toolchain_prefix }}
-        CONFIG_TOOLCHAIN_LIBC=${{ inputs.toolchain_libc }}
-        EOF
-        
         cd openwrt
+
+        ./scripts/ext-toolchain.sh --toolchain /opt/toolchain --overwrite-config --config ${{ inputs.target_arch }}
         make defconfig
 
     - name: Download Packages
