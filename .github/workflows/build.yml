@@ -130,13 +130,12 @@ jobs:
     - name: Extract Vermagic
       id: get_vermagic
       run: |
-        # Adjust the path to where your JSON file is located
         JSON_FILE="openwrt/bin/targets/ramips/mt7621/profiles.json"
         VERMAGIC=$(grep -oP '"vermagic":"\K[^"]+' "$JSON_FILE")
         
         VER_URL=$(dirname "$inputs.toolchain_link")
 
-        if curl -s "$VER_URL" | grep -q $VERMAGIC; then
+        if curl -s "$VER_URL/kmods/" | grep -q $VERMAGIC; then
           echo "vermagic=$VERMAGIC | ✅ Matched with Openwrt Official Build" >> $GITHUB_OUTPUT
         else
           echo "vermagic=$VERMAGIC | ❌ Mismatch with Openwrt Official Build" >> $GITHUB_OUTPUT
