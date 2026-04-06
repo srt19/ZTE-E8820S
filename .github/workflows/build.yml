@@ -1,11 +1,11 @@
-name: Build OpenWrt Firmware
-run-name: Build OpenWrt Firmware for ZTE E8820S ${{ inputs.repo_branch }}
+name: Build ImmortalWrt Firmware
+run-name: Build ImmortalWrt Firmware for ZTE E8820S ${{ inputs.repo_branch }}
 
 on:
   workflow_dispatch:
     inputs:
       repo_branch:
-        description: 'OpenWrt branch or tag (e.g., openwrt-23.05, v23.05.3)'
+        description: 'ImmortalWrt branch or tag (e.g., openwrt-23.05, v23.05.3)'
         required: true
         type: string
 
@@ -44,9 +44,7 @@ permissions:
   contents: write
 
 env:
-  REPO_URL: https://github.com/openwrt/openwrt
-  OPENWRT_RELEASE: ${{ inputs.repo_branch }}
-  OPENWRT_TARGET: ${{ inputs.target_arch }}
+  REPO_URL: https://github.com/immortalwrt/immortalwrt
   TOOLCHAIN_URL : ${{ inputs.toolchain_link }}
   LLVM_URL : ${{ inputs.llvm_link }}
 
@@ -72,8 +70,8 @@ jobs:
         gcc-multilib g++-multilib gettext git libncurses5-dev libssl-dev \
         python3-setuptools rsync swig unzip zlib1g-dev file wget
 
-    - name: Clone OpenWrt Source
-      run: git clone --depth 1 $REPO_URL -b ${{ inputs.repo_branch }} openwrt
+    - name: Clone ImmortalWrt Source
+      run: git clone --depth 1 $REPO_URL -b ${{ inputs.repo_branch }} immortalwrt
 
     - name: Download External Toolchain
       # Downloads and extracts it toolchain and llvm
@@ -89,39 +87,39 @@ jobs:
 
         echo "Downloading $LLVM_URL..."
         wget -q "$LLVM_URL"
-        tar -xf "$llvm_name" -C ./openwrt
+        tar -xf "$llvm_name" -C ./immortalwrt
         rm "$llvm_name"
 
     - name: Applying patch
       run: |
-        cp patch/mt7621_zte_e8820s.dts openwrt/target/linux/ramips/dts
-        sed -i '/esac/e cat patch/leds.txt' openwrt/target/linux/ramips/mt7621/base-files/etc/board.d/01_leds
-        sed -i '72r patch/upgrade.txt' openwrt/target/linux/ramips/mt7621/base-files/lib/upgrade/platform.sh
-        cat patch/zte.txt >> openwrt/target/linux/ramips/image/mt7621.mk
-        cp patch/99-default-settings openwrt/package/base-files/files/etc/uci-defaults
+        cp patch/mt7621_zte_e8820s.dts immortalwrt/target/linux/ramips/dts
+        sed -i '/esac/e cat patch/leds.txt' immortalwrt/target/linux/ramips/mt7621/base-files/etc/board.d/01_leds
+        sed -i '72r patch/upgrade.txt' immortalwrt/target/linux/ramips/mt7621/base-files/lib/upgrade/platform.sh
+        cat patch/zte.txt >> immortalwrt/target/linux/ramips/image/mt7621.mk
+        cp patch/99-default-settings immortalwrt/package/base-files/files/etc/uci-defaults
 
     - name: Update and Install Feeds
-      working-directory: ./openwrt
+      working-directory: ./immortalwrt
       run: |
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
     - name: Generate Custom Configuration & Inject Toolchain
-      working-directory: ./openwrt
+      working-directory: ./immortalwrt
       run: |
         wget -q -O .config "${{ inputs.config_link }}"
         ./scripts/ext-toolchain.sh --toolchain /opt/toolchain --overwrite-config --config ${{ inputs.target_arch }}
         make defconfig
 
     - name: Download Packages
-      working-directory: ./openwrt
+      working-directory: ./immortalwrt
       run: |
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: Compile OpenWrt
-      working-directory: ./openwrt
+    - name: Compile ImmortalWrt
+      working-directory: ./immortalwrt
       run: |
         echo -e "$(nproc) thread compile"
         make -j$(nproc) || make -j1 V=s
@@ -130,7 +128,8 @@ jobs:
     - name: Extract Vermagic
       id: get_vermagic
       run: |
-        JSON_FILE="openwrt/bin/targets/ramips/mt7621/profiles.json"
+        # Adjust the path to where your JSON file is located
+        JSON_FILE="immortalwrt/bin/targets/ramips/mt7621/profiles.json"
         VERMAGIC=$(grep -oP '"vermagic":"\K[^"]+' "$JSON_FILE")
         
         VER_URL=$(dirname "$inputs.toolchain_link")
@@ -138,14 +137,14 @@ jobs:
         if curl -s "$VER_URL/kmods/" | grep -q $VERMAGIC; then
           echo "vermagic=$VERMAGIC | ✅ Matched with Openwrt Official Build" >> $GITHUB_OUTPUT
         else
-          echo "vermagic=$VERMAGIC | ❌ Mismatch with Openwrt Official Build" >> $GITHUB_OUTPUT
+          echo "vermagic=$VERMAGIC | ❌ Mismatch with ImmortalWrt Official Build" >> $GITHUB_OUTPUT
         fi
 
     - name: Generate Release Tag
       id: tag
       run: |
         echo "release_tag=${{ inputs.repo_branch }}-$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_OUTPUT
-        echo "release_name=OpenWrt ZTE E8820S ${{ inputs.repo_branch }} $(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
+        echo "release_name=ImmortalWrt ZTE E8820S ${{ inputs.repo_branch }} $(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
 
     - name: Publish to GitHub Releases
       uses: softprops/action-gh-release@v2.6.1
@@ -154,13 +153,13 @@ jobs:
         name: ${{ steps.tag.outputs.release_name }}
         prerelease: ${{ inputs.is_prerelease }}
         make_latest: ${{ inputs.is_prerelease == false && 'true' || 'false'}}
-        files: openwrt/bin/targets/ramips/mt7621/*
+        files: immortalwrt/bin/targets/ramips/mt7621/*
         body: |
-          ## ZTE E8820S OpenWrt Firmware ${{ inputs.repo_branch }}
-          Automated OpenWrt firmware build for ZTE E8820S.
+          ## ZTE E8820S ImmortalWrt Firmware ${{ inputs.repo_branch }}
+          Automated ImmortalWrt firmware build for ZTE E8820S.
           
           Version: ${{ inputs.repo_branch }}
           Vermagic: ${{ steps.get_vermagic.outputs.vermagic }}
-          *Compiled using pre-compiled OpenWrt toolchain*
+          *Compiled using pre-compiled ImmortalWrt toolchain*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
