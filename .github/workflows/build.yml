@@ -92,11 +92,10 @@ jobs:
 
     - name: Applying patch
       run: |
-        cp patch/mt7621_zte_e8820s.dts immortalwrt/target/linux/ramips/dts
+        cp patch/mt7621_zte_e8820sb.dts immortalwrt/target/linux/ramips/dts
         sed -i '/esac/e cat patch/leds.txt' immortalwrt/target/linux/ramips/mt7621/base-files/etc/board.d/01_leds
         sed -i '72r patch/upgrade.txt' immortalwrt/target/linux/ramips/mt7621/base-files/lib/upgrade/platform.sh
         cat patch/zte.txt >> immortalwrt/target/linux/ramips/image/mt7621.mk
-        cp patch/99-default-settings immortalwrt/package/base-files/files/etc/uci-defaults
 
     - name: Update and Install Feeds
       working-directory: ./immortalwrt

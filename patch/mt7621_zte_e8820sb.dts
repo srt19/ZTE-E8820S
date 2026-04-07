@@ -6,8 +6,8 @@
 #include <dt-bindings/input/input.h>
 
 / {
-    model = "ZTE E8820S";
-    compatible = "zte,e8820s", "mediatek,mt7621-soc";
+    model = "ZTE E8820SB";
+    compatible = "zte,e8820sb", "mediatek,mt7621-soc";
 
     aliases {
         led-boot = &led_sys;

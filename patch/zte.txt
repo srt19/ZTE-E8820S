@@ -1,5 +1,5 @@
 
-define Device/zte_e8820s
+define Device/zte_e8820sb
   $(Device/dsa-migration)
   $(Device/uimage-lzma-loader)
   BLOCKSIZE := 128k
@@ -12,7 +12,7 @@ define Device/zte_e8820s
   IMAGE/factory.bin := append-kernel | pad-to $$(KERNEL_SIZE) | append-ubi | \
        check-size
   DEVICE_VENDOR := ZTE
-  DEVICE_MODEL := E8820S
+  DEVICE_MODEL := E8820SB
   DEVICE_PACKAGES := kmod-mt7603 kmod-mt76x2 kmod-usb3 uboot-envtools
 endef
-TARGET_DEVICES += zte_e8820s
+TARGET_DEVICES += zte_e8820sb
